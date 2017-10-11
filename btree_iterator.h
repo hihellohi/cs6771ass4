@@ -11,4 +11,25 @@
 // iterator related interface stuff here; would be nice if you called your
 // iterator class btree_iterator (and possibly const_btree_iterator)
 
+template<typename T> btree;
+
+template<typename T, typename RetVal>
+class btree_iterator {
+	public:
+		friend btree<T>;
+
+		btree_iterator() : cur_{nullptr} { }
+		btree_iterator(Node *cur, int index) : cur_{cur}, index_{index} { }
+
+		Retval& operator*() {
+			return cur_.values[index_];
+		}
+	private:
+		int index_;
+		Node *cur_;
+		bool valid(){
+			return (unsigned)index < cur_->values.size();
+		}
+}
+
 #endif
