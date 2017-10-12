@@ -19,17 +19,15 @@ class btree_iterator {
 		friend btree<T>;
 
 		btree_iterator() : cur_{nullptr} { }
-		btree_iterator(Node *cur, int index) : cur_{cur}, index_{index} { }
+		btree_iterator(Node *cur, size_t index) : cur_{cur}, index_{index} { }
+		btree_iterator(std::pair<Node, size_t> pair) : btree_iterator{pair.first, pair.second} { }
 
 		Retval& operator*() {
 			return cur_.values[index_];
 		}
 	private:
-		int index_;
-		Node *cur_;
-		bool valid(){
-			return (unsigned)index < cur_->values.size();
-		}
+		size_t index_;
+		btree<T>::Node *cur_;
 }
 
 #endif

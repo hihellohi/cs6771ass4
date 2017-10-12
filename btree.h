@@ -37,14 +37,17 @@ class btree {
 		size_t maxNodeElems_;
 		unique_ptr<Node> head_;
 
-		template<typename it>
-		it lower_bound(Node *cur, const T& elem) const {
+		std::pair<Node*, size_t> lower_bound(Node *cur, const T& elem) const {
 			const auto lower = std::lower_bound(cur->values.begin(), cur->values.end(), elem);
 			int index = lower - cur->values.begin();
 			if(*lower == elem || cur.values[index] == nullptr) {
-				return (cur, index);
+				return make_pair(cur, index);
 			}
 			return lower_bound<it>(cur.values[index].get(), elem);
+		}
+
+		inline bool valid(std::pair<Node*, size_t> pair){
+			return pair.second < pair.first->values.size();
 		}
 
 		iterator make_node(unique_ptr<T> &ptr, const T& elem) {
@@ -169,8 +172,8 @@ class btree {
 			if(head_ == nullptr){
 				return end();
 			}
-			auto lower = lower_bound<iterator>(head_.get(), elem);
-			return lower.valid() && *lower == elem ? lower : end();
+			auto lower = lower_bound(head_.get(), elem);
+			return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
 		}
 
 		/**
@@ -186,8 +189,8 @@ class btree {
 			if(head_ == nullptr){
 				return cend();
 			}
-			auto lower = lower_bound<const_iterator>(head_.get(), elem);
-			return lower.valid() && *lower == elem ? lower : cend();
+			auto lower = lower_bound(head_.get(), elem);
+			return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
 		}
 
 		/**
@@ -223,13 +226,13 @@ class btree {
 			}
 
 			auto lower = lower_bound<iterator>(head_.get(), elem);
-			if(lower.valid() && *lower == elem){
-				return make_pair(lower, false);
+			if(valid(lower) && lower.first->values[lower.second]){
+				return make_pair(iterator(lower), false);
 			}
 			if(lower.cur_->values.size() < maxNodeElems_){
 				lower.cur_->values.push_back(elem);
 			}
-			return make_pair(make_node(lower.cur_->children[lower.index], elem), true);
+			return make_pair(make_node(lower.first->children[lower.index], elem), true);
 		}
 };
 
