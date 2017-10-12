@@ -11,10 +11,16 @@
 // iterator related interface stuff here; would be nice if you called your
 // iterator class btree_iterator (and possibly const_btree_iterator)
 
-template<typename T> btree;
+template<typename T> class btree;
 
 template<typename T, typename RetVal>
 class btree_iterator {
+	private:
+		using Node = typename btree<T>::Node;
+
+		size_t index_;
+		Node *cur_;
+
 	public:
 		friend btree<T>;
 
@@ -22,12 +28,9 @@ class btree_iterator {
 		btree_iterator(Node *cur, size_t index) : cur_{cur}, index_{index} { }
 		btree_iterator(std::pair<Node, size_t> pair) : btree_iterator{pair.first, pair.second} { }
 
-		Retval& operator*() {
+		RetVal& operator*() {
 			return cur_.values[index_];
 		}
-	private:
-		size_t index_;
-		btree<T>::Node *cur_;
-}
+};
 
 #endif

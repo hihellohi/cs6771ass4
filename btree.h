@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 // we better include the iterator
 #include "btree_iterator.h"
@@ -24,45 +25,10 @@
 
 template <typename T> 
 class btree {
-	private:
-		// The details of your implementation go here
-		struct Node {
-			Node(int size) : values(size), children(size + 1) {}
-
-			std::vector<T> values;
-			std::vector<unique_ptr<Node>> children;
-			Node *parent;
-		};
-
-		size_t maxNodeElems_;
-		unique_ptr<Node> head_;
-
-		std::pair<Node*, size_t> lower_bound(Node *cur, const T& elem) const {
-			const auto lower = std::lower_bound(cur->values.begin(), cur->values.end(), elem);
-			int index = lower - cur->values.begin();
-			if(*lower == elem || cur.values[index] == nullptr) {
-				return make_pair(cur, index);
-			}
-			return lower_bound<it>(cur.values[index].get(), elem);
-		}
-
-		inline bool valid(std::pair<Node*, size_t> pair){
-			return pair.second < pair.first->values.size();
-		}
-
-		iterator make_node(unique_ptr<T> &ptr, const T& elem) {
-			ptr.reset(new Node(maxNodeElems_));
-			ptr->values.push_back(elem);
-
-			ptr->children.push_back(nullptr);
-			ptr->children.push_back(nullptr);
-			return (head_.get(), 0);
-		}
-
 	public:
 		/** Hmm, need some iterator typedefs here... friends? **/
 		using iterator = btree_iterator<T, T>;
-		using const_iterator = btree_iterator<T, std::add_const<T>::type>;
+		using const_iterator = btree_iterator<T, typename std::add_const<T>::type>;
 
 		friend iterator;
 		friend const_iterator;
@@ -133,7 +99,7 @@ class btree {
 		 * @param tree a const reference to a B-Tree object
 		 * @return a reference to os
 		 */
-		friend std::ostream& operator<< <T> (std::ostream& os, const btree<T>& tree);
+		//friend std::ostream& operator<< <T> (std::ostream& os, const btree<T>& tree);
 
 		/**
 		 * The following can go here
@@ -146,13 +112,9 @@ class btree {
 		 * -- crbegin() 
 		 * -- crend() 
 		 */
-		iterator end() {
-			return ();
-		}
-
-		const_iterator end() const {
-			return ();
-		}
+		inline iterator end() { return {}; }
+		inline const_iterator end() const { return {}; }
+		inline const_iterator cend() const { return {}; }
 
 		/**
 		 * Returns an iterator to the matching element, or whatever 
@@ -168,14 +130,7 @@ class btree {
 		 * @return an iterator to the matching element, or whatever the
 		 *         non-const end() returns if no such match was ever found.
 		 */
-		iterator find(const T& elem) {
-			if(head_ == nullptr){
-				return end();
-			}
-			auto lower = lower_bound(head_.get(), elem);
-			return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
-		}
-
+		iterator find(const T& elem);
 		/**
 		 * Identical in functionality to the non-const version of find, 
 		 * save the fact that what's pointed to by the returned iterator
@@ -185,13 +140,7 @@ class btree {
 		 * @return an iterator to the matching element, or whatever the
 		 *         const end() returns if no such match was ever found.
 		 */
-		const_iterator find(const T& elem) const {
-			if(head_ == nullptr){
-				return cend();
-			}
-			auto lower = lower_bound(head_.get(), elem);
-			return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
-		}
+		const_iterator find(const T& elem) const;
 
 		/**
 		 * Operation which inserts the specified element
@@ -220,20 +169,83 @@ class btree {
 		 *         stores true if and only if the element needed to be added 
 		 *         because no matching element was there prior to the insert call.
 		 */
-		std::pair<iterator, bool> insert(const T& elem) {
-			if(head_ == nullptr){
-				return make_pair(make_node(head_, elem), true);
-			}
+		std::pair<iterator, bool> insert(const T& elem); 
 
-			auto lower = lower_bound<iterator>(head_.get(), elem);
-			if(valid(lower) && lower.first->values[lower.second]){
-				return make_pair(iterator(lower), false);
-			}
-			if(lower.cur_->values.size() < maxNodeElems_){
-				lower.cur_->values.push_back(elem);
-			}
-			return make_pair(make_node(lower.first->children[lower.index], elem), true);
-		}
+	private:
+		// The details of your implementation go here
+		struct Node {
+			Node(int size) : values(size), children(size + 1) {}
+
+			std::vector<T> values;
+			std::vector<std::unique_ptr<Node>> children;
+			Node *parent;
+		};
+
+		size_t maxNodeElems_;
+		std::unique_ptr<Node> head_;
+
+		std::pair<Node*, size_t> lower_bound(Node *cur, const T& elem) const;
+		inline bool valid(std::pair<Node*, size_t> pair);
+		iterator make_node(std::unique_ptr<T> &ptr, const T& elem);
 };
+
+template<typename T>
+auto btree<T>::find(const T& elem) -> iterator {
+	if(head_ == nullptr){
+		return end();
+	}
+	auto lower = lower_bound(head_.get(), elem);
+	return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
+}
+
+template<typename T>
+auto btree<T>::find(const T& elem) const -> const_iterator {
+	if(head_ == nullptr){
+		return cend();
+	}
+	auto lower = lower_bound(head_.get(), elem);
+	return valid(lower) && lower.first->values[lower.second] == elem ? (lower) : end();
+}
+
+template<typename T>
+auto btree<T>::insert(const T& elem) -> std::pair<iterator, bool> {
+	if(head_ == nullptr){
+		return make_pair(make_node(head_, elem), true);
+	}
+
+	auto lower = lower_bound(head_.get(), elem);
+	if(valid(lower) && lower.first->values[lower.second]){
+		return make_pair(iterator(lower), false);
+	}
+	if(lower.cur_->values.size() < maxNodeElems_){
+		lower.cur_->values.push_back(elem);
+	}
+	return make_pair(make_node(lower.first->children[lower.index], elem), true);
+}
+
+template<typename T>
+auto btree<T>::lower_bound(Node *cur, const T& elem) const -> std::pair<Node*, size_t> {
+	const auto lower = std::lower_bound(cur->values.begin(), cur->values.end(), elem);
+	int index = lower - cur->values.begin();
+	if(*lower == elem || cur.values[index] == nullptr) {
+		return make_pair(cur, index);
+	}
+	return lower_bound(cur.values[index].get(), elem);
+}
+
+template<typename T>
+inline bool btree<T>::valid(std::pair<Node*, size_t> pair) {
+	return pair.second < pair.first->values.size();
+}
+
+template<typename T>
+auto btree<T>::make_node(std::unique_ptr<T> &ptr, const T& elem) -> iterator {
+	ptr.reset(new Node(maxNodeElems_));
+	ptr->values.push_back(elem);
+
+	ptr->children.push_back(nullptr);
+	ptr->children.push_back(nullptr);
+	return (head_.get(), 0);
+}
 
 #endif
