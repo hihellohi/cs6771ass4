@@ -282,7 +282,7 @@ auto btree<T>::insert(const T& elem)
 		lower.first->children_.push_back(nullptr);
 
 		assert(values.at(values.rend() - it) == elem);
-		return std::make_pair(iterator(lower.first, values.rend() - it - 1), true);
+		return std::make_pair(iterator(lower.first, values.rend() - it), true);
 	}
 
 	return std::make_pair(make_node(lower.first, lower.first->children_.at(lower.second), elem), true);
