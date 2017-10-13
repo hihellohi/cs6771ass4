@@ -28,11 +28,12 @@ using std::ifstream;
 using std::ofstream;
 using std::set;
 using std::string;
+using std::pair;
 
 namespace {
 
-const long kMinInteger = 1000000;
-const long kMaxInteger = 100000000;
+const long kMinInteger = 100;
+const long kMaxInteger = 10000;
 
 void initRandom(unsigned long);
 long getRandom(long low, long high);
@@ -121,11 +122,10 @@ int main(void) {
   btree<long> testContainer(99);
   set<long> stableContainer;
     
-  insertRandomNumbers(testContainer, stableContainer, 1000000);
+  insertRandomNumbers(testContainer, stableContainer, 1000);
   btree<long> btcpy = testContainer;
   confirmEverythingMatches(btcpy, stableContainer);
 
-/***
   
   // this next portion was something I used to sort a bunch of chars
   // this was what I used to debug my iterator and made it work
@@ -142,7 +142,7 @@ int main(void) {
 	for(btree<char>::iterator iter = astring.begin(); iter != astring.end(); ++iter)
 	cout << *iter;
 	cout << endl;
-  
+/**  
   // a full-scale string test of the tree using iterators
   btree<string> *strTable = new btree<string>(40);
 		
@@ -191,7 +191,7 @@ int main(void) {
   ofs1.close();
   ofs2.close();
   
-***/
+  */
 
   return 0;	
 }

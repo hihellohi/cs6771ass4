@@ -36,7 +36,7 @@ class btree_iterator {
 		friend class btree_iterator;
 		friend class btree<T>;
 
-		reference operator*() const { return cur_.values[index_]; }
+		reference operator*() const { return cur_->values_.at(index_); }
 		pointer operator->() const { return &(operator*()); }
 
 		template <typename U>
