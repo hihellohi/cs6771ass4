@@ -46,9 +46,9 @@ bool confirmEverythingMatches(const btree<long>&, const set<long>&);
  **/
 void initRandom(unsigned long seed = 0) {
   if (seed == 0) {
-    srandom(time(NULL));
+    srand(time(NULL));
   } else {
-    srandom(seed);
+    srand(seed);
   }
 }
 
@@ -58,7 +58,7 @@ void initRandom(unsigned long seed = 0) {
  * than the older rand() function.
  **/
 long getRandom(long low, long high) {
-  return (low + (random() % ((high - low) + 1)));
+  return (low + (rand() % ((high - low) + 1)));
 }
 
 /**
