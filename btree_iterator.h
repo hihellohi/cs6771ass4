@@ -2,6 +2,7 @@
 #define BTREE_ITERATOR_H
 
 #include <iterator>
+#include <cassert>
 
 /**
  * You MUST implement the btree iterators as (an) external class(es) in this file.
@@ -21,7 +22,6 @@ class btree_iterator {
 		Node *cur_;
 		size_t index_;
 
-		btree_iterator() : cur_{nullptr} { }
 		btree_iterator(Node *cur, size_t index) : cur_{cur}, index_{index} { }
 		btree_iterator(std::pair<Node*, size_t> pair) : btree_iterator{pair.first, pair.second} { }
 
@@ -48,6 +48,50 @@ class btree_iterator {
 		template <typename U>
 		bool operator!=(const btree_iterator<T, U> &other) const {
 			return !(*this == other);
+		}
+
+		btree_iterator& operator++(){
+			const auto &ptr = cur_->children_.at(index_ + 1);
+			if(ptr){
+				for(cur_ = ptr.get(); *cur_->children_.begin(); cur_ = cur_->children_.begin()->get());
+				index_ = 0;
+			}
+			else{
+				++index_;
+				while(index_ == cur_->values_.size() && cur_->parent_){
+					index_ = cur_->index_;
+					cur_ = cur_->parent_;
+				}
+			}
+			return *this;
+		}
+
+		btree_iterator operator++(int a){
+			auto copy = *this;
+			operator++();
+			return copy;
+		}
+
+		btree_iterator& operator--(){
+			const auto &ptr = cur_->children_.at(index_);
+			if(ptr){
+				for(cur_ = ptr.get(); *cur_->children_.rbegin(); cur_ = cur_->children_.rbegin()->get());
+				index_ = cur_->values_.size() - 1;
+			}
+			else{
+				while(index_ == 0){
+					index_ = cur_->index_;
+					cur_ = cur_->parent_;
+				}
+				index_--;
+			}
+			return *this;
+		}
+
+		btree_iterator operator--(int a){
+			auto copy = *this;
+			operator--();
+			return copy;
 		}
 };
 
