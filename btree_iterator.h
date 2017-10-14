@@ -2,6 +2,7 @@
 #define BTREE_ITERATOR_H
 
 #include <iterator>
+#include <utility>
 #include <cassert>
 
 /**
@@ -17,13 +18,13 @@ template<typename T> class btree;
 template<typename T, typename RetVal>
 class btree_iterator {
 	private:
-		using Node = typename btree<T>::Node;
+		using node = typename btree<T>::node;
 
-		Node *cur_;
+		node *cur_;
 		size_t index_;
 
-		btree_iterator(Node *cur, size_t index) : cur_{cur}, index_{index} { }
-		btree_iterator(std::pair<Node*, size_t> pair) : btree_iterator{pair.first, pair.second} { }
+		btree_iterator(node *cur, size_t index) : cur_{cur}, index_{index} { }
+		btree_iterator(std::pair<node*, size_t> pair) : btree_iterator{pair.first, pair.second} { }
 
 	public:
 		typedef std::ptrdiff_t difference_type;
@@ -35,6 +36,10 @@ class btree_iterator {
 		template <typename U, typename RetVal2>
 		friend class btree_iterator;
 		friend class btree<T>;
+
+		operator btree_iterator<T, typename std::add_const<RetVal>::type>() const {
+			return {cur_, index_};
+		}
 
 		reference operator*() const { return cur_->values_.at(index_); }
 		pointer operator->() const { return &(operator*()); }
